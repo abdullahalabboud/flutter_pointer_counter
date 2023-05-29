@@ -30,6 +30,7 @@ class PointerCountPage extends StatefulWidget {
 }
 
 class _PointerCountPageState extends State<PointerCountPage> {
+  bool zoomable = false;
   final events = [];
 
   double xs = 0, ys = 0, xe = 0, ye = 0;
@@ -51,8 +52,8 @@ class _PointerCountPageState extends State<PointerCountPage> {
 
   // & select last points function
   void lastPoints({required double x, required double y}) {
-    xs = x;
-    ys = y;
+    xe = x;
+    ye = y;
     setState(() {});
   }
 
@@ -69,23 +70,34 @@ class _PointerCountPageState extends State<PointerCountPage> {
           child: Container(
             color: Colors.blue,
             child: InteractiveViewer(
+              panEnabled: zoomable,
               child: Listener(
                 onPointerUp: (event) {
                   events.clear();
+                  setState(() {});
                 },
                 onPointerDown: (event) {
-                  startPoints(
-                      x: event.localPosition.dx, y: event.localPosition.dy);
                   events.add(event.pointer);
+                  if (events.length == 1) {
+                    startPoints(
+                        x: event.localPosition.dx, y: event.localPosition.dy);
+                    zoomable = false;
+                  } else if (events.length == 2) {
+                    zoomable = true;
+                  }
                   fingers = events.length;
                   print(events.length);
 
                   setState(() {});
                 },
                 onPointerMove: (event) {
-                  lastPoints(
-                      x: event.localPosition.dx, y: event.localPosition.dy);
-
+                  if (events.length == 1) {
+                    lastPoints(
+                        x: event.localPosition.dx, y: event.localPosition.dy);
+                    zoomable = false;
+                  } else if (events.length == 2) {
+                    zoomable = true;
+                  }
                   setState(() {});
                 },
                 child: CustomPaint(
@@ -93,7 +105,8 @@ class _PointerCountPageState extends State<PointerCountPage> {
                     Rect.fromLTRB(xs, ys, xe, ye),
                   ),
                   child: Center(
-                    child: Text("Fingers Count : ${fingers}"),
+                    child: Text(
+                        "Fingers Count : ${fingers} \n events.length : ${events.length} \n start x :${xs.toStringAsFixed(2)} , start y :${ys.toStringAsFixed(2)} , end x :${xe.toStringAsFixed(2)} , end y :${ye.toStringAsFixed(2)} "),
                   ),
                 ),
               ),
